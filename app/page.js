@@ -21,14 +21,15 @@ function normalizeFoodName(value) {
 
 export default function Home() {
   const [foodInput, setFoodInput] = useState('');
-  const [checkedFood, setCheckedFood] = useState('');
+  const [descriptionInput, setDescriptionInput] = useState('');
+  const [submission, setSubmission] = useState(null);
 
   const result = useMemo(() => {
-    if (!checkedFood) {
+    if (!submission?.foodName) {
       return null;
     }
 
-    if (JUNK_FOODS.includes(checkedFood)) {
+    if (JUNK_FOODS.includes(submission.foodName)) {
       return {
         kind: 'junk',
         message: 'Yes, this is usually considered junk food.'
@@ -39,11 +40,20 @@ export default function Home() {
       kind: 'not-junk',
       message: 'No, this is not in our junk food list.'
     };
-  }, [checkedFood]);
+  }, [submission]);
 
   function handleSubmit(event) {
     event.preventDefault();
-    setCheckedFood(normalizeFoodName(foodInput));
+    const normalizedFood = normalizeFoodName(foodInput);
+
+    if (!normalizedFood || !descriptionInput.trim()) {
+      return;
+    }
+
+    setSubmission({
+      foodName: normalizedFood,
+      description: descriptionInput.trim()
+    });
   }
 
   return (
@@ -51,8 +61,8 @@ export default function Home() {
       <section className="mx-auto w-full max-w-2xl rounded-2xl bg-white p-6 shadow-lg sm:p-8">
         <h1 className="text-3xl font-bold text-slate-900">Junk or no</h1>
         <p className="mt-3 text-slate-600">
-          Type a food name and we will tell you if it is junk food based on our beginner-friendly
-          starter list.
+          Add a food item with a short note on how it is made, then submit to check whether it is
+          junk food.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -67,22 +77,38 @@ export default function Home() {
             value={foodInput}
             onChange={(event) => setFoodInput(event.target.value)}
           />
+
+          <label htmlFor="description" className="block text-sm font-medium">
+            How is it made? (short description)
+          </label>
+          <textarea
+            id="description"
+            rows={3}
+            placeholder="Example: Potato slices are deep fried and seasoned with salt."
+            className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none ring-indigo-500 focus:ring-2"
+            value={descriptionInput}
+            onChange={(event) => setDescriptionInput(event.target.value)}
+          />
+
           <button
             type="submit"
             className="rounded-lg bg-indigo-600 px-5 py-3 font-semibold text-white transition hover:bg-indigo-700"
           >
-            Check food
+            Submit and check
           </button>
         </form>
 
-        {result && (
+        {result && submission && (
           <div
             className={`mt-6 rounded-lg p-4 ${
               result.kind === 'junk' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
             }`}
           >
-            <p className="font-semibold">Result for "{checkedFood}":</p>
+            <p className="font-semibold">Result for "{submission.foodName}":</p>
             <p>{result.message}</p>
+            <p className="mt-2 text-sm">
+              <span className="font-semibold">How it is made:</span> {submission.description}
+            </p>
           </div>
         )}
 
